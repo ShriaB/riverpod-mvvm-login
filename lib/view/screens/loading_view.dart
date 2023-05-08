@@ -12,26 +12,26 @@ class LoadingView extends ConsumerStatefulWidget {
 }
 
 class _LoadingViewState extends ConsumerState<LoadingView> {
-  /// Checks if user is already logged in using UserViewModel
-  /// If user logged in then redirects to home page
-  /// Else goes to login page with a delay of 2 seconds
+  /// Checks if user is logged in
+  /// If user logged in redirects to home screen
+  /// Else to login screen
   Future<void> isUserLoggedIn() async {
-    var userViewModel = ref.read(userViewModelProvider);
-    bool isUserLoggedIn = await userViewModel.getUser();
-
-    Future.delayed(const Duration(seconds: 2));
-
-    if (context.mounted) {
-      if (isUserLoggedIn) {
-        Navigator.of(context).pushReplacementNamed(RouteNames.home);
-      } else {
-        Navigator.of(context).pushReplacementNamed(RouteNames.login);
+    await Future.delayed(const Duration(seconds: 2));
+    ref.watch(getUserProvider.future).then((value) {
+      if (context.mounted) {
+        if (value) {
+          Navigator.of(context).pushReplacementNamed(RouteNames.home);
+        } else {
+          Navigator.of(context).pushReplacementNamed(RouteNames.login);
+        }
       }
-    }
+    });
   }
 
   @override
   void initState() {
+    /// We can call async functions only in the initState function not in the build function
+    /// And the function should be called before super.initState()
     isUserLoggedIn();
     super.initState();
   }
@@ -40,12 +40,10 @@ class _LoadingViewState extends ConsumerState<LoadingView> {
   Widget build(BuildContext context) {
     /// While it checks if user is logged in or not a spinner is displayed
     return const Scaffold(
-      body: Center(
-        child: SpinKitFoldingCube(
-          color: Colors.blue,
-          size: 50.0,
-        ),
-      ),
-    );
+        body: Center(
+            child: SpinKitFadingCube(
+      color: Colors.blue,
+      size: 50.0,
+    )));
   }
 }

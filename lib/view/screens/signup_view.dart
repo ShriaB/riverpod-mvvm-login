@@ -20,24 +20,24 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
   /// TextEditingControllers for TextFormFields
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   /// Focus nodes for TextFormFields
   final FocusNode _emailFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
+  final FocusNode _confirmPasswordFocusNode = FocusNode();
 
   final _isEmailValid = StateProvider<bool>((ref) => true);
   final _isPasswordValid = StateProvider<bool>((ref) => true);
+  final _isConfirmPasswordValid = StateProvider<bool>((ref) => true);
   final _obscurePassword = StateProvider<bool>((ref) => true);
+  final _obscureConfirmPassword = StateProvider<bool>((ref) => true);
 
-  /// Checks if email and password have a valid format
-  /// If not valid then display error messages
-  /// If valid then calls the login() of viewModel
-  /// If request is successful then navigates to Home screen
-  /// Else displays snackbars to give feedback to the user that request failed
   void signup() async {
-    print("In login");
     String email = _emailController.text;
     String password = _passwordController.text;
+    String confirmPassword = _confirmPasswordController.text;
 
     ref
         .read(_isEmailValid.notifier)
@@ -46,22 +46,25 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
         .read(_isPasswordValid.notifier)
         .update((state) => Validators.isPasswordValid(password));
 
-    if (ref.read(_isEmailValid) && ref.read(_isPasswordValid)) {
-      Map<String, String> data = {
-        "email": _emailController.text,
-        "password": _passwordController.text
-      };
+    ref.read(_isConfirmPasswordValid.notifier).update((state) =>
+        Validators.isConfirmPasswordValid(password, confirmPassword));
 
-      ref.watch(loginDataProvider(data).future).then((value) {
-        print("In login data: $value");
+    /// Checks if email and password have a valid format and if confirm password matches password
+    /// If not valid then display error messages automatically due to changed state
+    if (ref.read(_isEmailValid) &&
+        ref.read(_isPasswordValid) &&
+        ref.read(_isConfirmPasswordValid)) {
+      Map<String, String> data = {"email": email, "password": password};
+
+      /// If valid then calls the signup() of viewModel
+      ref.watch(signupDataProvider(data).future).then((value) {
+        /// If request is successful then navigates to Login screen
         if (context.mounted) {
-          Navigator.pushReplacementNamed(context, RouteNames.home);
+          Navigator.pushReplacementNamed(context, RouteNames.login);
         }
       }).onError((error, stackTrace) {
-        if (error is UnauthorisedException) {
-          Utils.showRedSnackBar(context,
-              "Incorrect credentials! Please enter valid credentials.");
-        } else if (error is SocketException) {
+        /// Else displays snackbars to give feedback to the user that request failed
+        if (error is SocketException) {
           Utils.showRedSnackBar(
               context, "You are offline! Please check internet connection.");
         } else {
@@ -90,8 +93,6 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               /// Email text field
-
-              /// Listening to [_isEmailValid] for displaying error messages
               TextFormField(
                 controller: _emailController,
                 focusNode: _emailFocusNode,
@@ -103,6 +104,8 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
                     border: textInputDecorationBorder,
                     labelText: "Email",
                     prefixIcon: const Icon(Icons.email),
+
+                    /// Listening to [_isEmailValid] for displaying error messages
                     errorText: ref.watch(_isEmailValid)
                         ? null
                         : "Please enter a valid email address: example@domain.com"),
@@ -114,8 +117,6 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
               ),
 
               /// Password text field
-              /// Listening to [_obscurePassword] for hidding and showing the password
-
               TextFormField(
                 controller: _passwordController,
                 focusNode: _passwordFocusNode,
@@ -133,10 +134,14 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
                         ? const Icon(Icons.visibility)
                         : const Icon(Icons.visibility_off),
                   ),
+
+                  /// Listening to [_isPasswordValid] for displaying error message in password is invalid
                   errorText: ref.watch(_isPasswordValid)
                       ? null
                       : "Password should contain atleat 6 characters",
                 ),
+
+                /// Listening to [_obscurePassword] for hidding and showing the password
                 obscureText: ref.watch(_obscurePassword),
               ),
 
@@ -144,11 +149,43 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
                 height: 20.0,
               ),
 
-              /// Login Button
+              /// Confirm Password text field
+              TextFormField(
+                controller: _confirmPasswordController,
+                focusNode: _confirmPasswordFocusNode,
+                decoration: InputDecoration(
+                  border: textInputDecorationBorder,
+                  labelText: "Password",
+                  prefixIcon: const Icon(Icons.lock),
+                  suffixIcon: InkWell(
+                    onTap: () {
+                      ref
+                          .read(_obscureConfirmPassword.notifier)
+                          .update((state) => !state);
+                    },
+                    child: (ref.watch(_obscureConfirmPassword))
+                        ? const Icon(Icons.visibility)
+                        : const Icon(Icons.visibility_off),
+                  ),
+
+                  /// Listening to [_isPasswordValid] for displaying error message in password is invalid
+                  errorText: ref.watch(_isConfirmPasswordValid)
+                      ? null
+                      : "Confirm Password should match the password",
+                ),
+
+                /// Listening to [_obscurePassword] for hidding and showing the password
+                obscureText: ref.watch(_obscureConfirmPassword),
+              ),
+
+              const SizedBox(
+                height: 20.0,
+              ),
+
+              /// Signup Button
               ElevatedButton.icon(
                   style: textButtonStyle,
                   onPressed: () {
-                    print("Button pressed");
                     signup();
                   },
                   icon: const Icon(

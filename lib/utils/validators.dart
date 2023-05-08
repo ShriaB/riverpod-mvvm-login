@@ -15,4 +15,10 @@ class Validators {
     if (password.length < 6) return false;
     return true;
   }
+
+  /// Takes the password and confirm password
+  /// Returns whether they match or not
+  static bool isConfirmPasswordValid(String password, String confirmPassword) {
+    return (password == confirmPassword);
+  }
 }

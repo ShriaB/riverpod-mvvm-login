@@ -25,20 +25,19 @@ class _LoginViewState extends ConsumerState<LoginView> {
   final FocusNode _emailFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
 
+  /// Validation could be achieved using setState() as these are not shared variable
+  /// But for practice used StateProvider
   final _isEmailValid = StateProvider<bool>((ref) => true);
   final _isPasswordValid = StateProvider<bool>((ref) => true);
   final _obscurePassword = StateProvider<bool>((ref) => true);
 
-  /// Checks if email and password have a valid format
-  /// If not valid then display error messages
-  /// If valid then calls the login() of viewModel
-  /// If request is successful then navigates to Home screen
-  /// Else displays snackbars to give feedback to the user that request failed
   void login() async {
     print("In login");
     String email = _emailController.text;
     String password = _passwordController.text;
 
+    /// Checks if email and password have a valid format
+    /// /// If not valid then display error messages automatically due to changed state
     ref
         .read(_isEmailValid.notifier)
         .update((state) => Validators.isEmailFormatValid(email));
@@ -46,18 +45,17 @@ class _LoginViewState extends ConsumerState<LoginView> {
         .read(_isPasswordValid.notifier)
         .update((state) => Validators.isPasswordValid(password));
 
+    /// If valid then calls the login() of viewModel
     if (ref.read(_isEmailValid) && ref.read(_isPasswordValid)) {
-      Map<String, String> data = {
-        "email": _emailController.text,
-        "password": _passwordController.text
-      };
+      Map<String, String> data = {"email": email, "password": password};
 
       ref.watch(loginDataProvider(data).future).then((value) {
-        print("In login data: $value");
+        /// If request is successful then navigates to Home screen
         if (context.mounted) {
           Navigator.pushReplacementNamed(context, RouteNames.home);
         }
       }).onError((error, stackTrace) {
+        /// Else displays snackbars to give feedback to the user that request failed
         if (error is UnauthorisedException) {
           Utils.showRedSnackBar(context,
               "Incorrect credentials! Please enter valid credentials.");
@@ -90,8 +88,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               /// Email text field
-
-              /// Listening to [_isEmailValid] for displaying error messages
               TextFormField(
                 controller: _emailController,
                 focusNode: _emailFocusNode,
@@ -103,6 +99,8 @@ class _LoginViewState extends ConsumerState<LoginView> {
                     border: textInputDecorationBorder,
                     labelText: "Email",
                     prefixIcon: const Icon(Icons.email),
+
+                    /// Listening to [_isEmailValid] for displaying error messages
                     errorText: ref.watch(_isEmailValid)
                         ? null
                         : "Please enter a valid email address: example@domain.com"),
@@ -114,8 +112,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
               ),
 
               /// Password text field
-              /// Listening to [_obscurePassword] for hidding and showing the password
-
               TextFormField(
                 controller: _passwordController,
                 focusNode: _passwordFocusNode,
@@ -129,10 +125,14 @@ class _LoginViewState extends ConsumerState<LoginView> {
                           .read(_obscurePassword.notifier)
                           .update((state) => !state);
                     },
+
+                    /// Listening to [_obscurePassword] for hidding and showing the password
                     child: (ref.watch(_obscurePassword))
                         ? const Icon(Icons.visibility)
                         : const Icon(Icons.visibility_off),
                   ),
+
+                  /// Listening to [_isPasswordValid] for displaying error message
                   errorText: ref.watch(_isPasswordValid)
                       ? null
                       : "Password should contain atleat 6 characters",
@@ -148,7 +148,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
               ElevatedButton.icon(
                   style: textButtonStyle,
                   onPressed: () {
-                    print("Button pressed");
                     login();
                   },
                   icon: const Icon(

@@ -7,6 +7,7 @@ class UserViewModel {
   UserModel? user;
   bool isUserLoggedIn = false;
 
+  /// Saves the token in local storage on user login
   Future<void> saveUser(UserModel user) async {
     this.user = user;
     final SharedPreferences sp = await SharedPreferences.getInstance();
@@ -14,6 +15,7 @@ class UserViewModel {
     isUserLoggedIn = true;
   }
 
+  /// For checking if user is logged in on app startup
   Future<bool> getUser() async {
     final SharedPreferences sp = await SharedPreferences.getInstance();
     String? token = sp.getString("token");
@@ -24,6 +26,7 @@ class UserViewModel {
     return isUserLoggedIn;
   }
 
+  /// For clearing user data on user logout
   Future<void> clearUser() async {
     final SharedPreferences sp = await SharedPreferences.getInstance();
     sp.clear();
@@ -31,4 +34,10 @@ class UserViewModel {
   }
 }
 
+/// Providers------------------------------------------------------------------
+
 final userViewModelProvider = Provider<UserViewModel>((ref) => UserViewModel());
+final getUserProvider =
+    FutureProvider<bool>((ref) => ref.read(userViewModelProvider).getUser());
+
+/// ----------------------------------------------------------------------------

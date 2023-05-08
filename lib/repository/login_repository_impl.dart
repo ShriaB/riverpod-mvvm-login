@@ -35,14 +35,13 @@ class LoginRepositoryImpl extends LoginRepository {
   }
 
   /// Takes the data that is to be posted to server
-  /// If successful Returns the UserModel containing the aunthorisation token
+  /// If successful returns else throws error
   @override
   Future<void> registerApi(dynamic data) async {
     try {
       dynamic response = await ref
           .read(apiServiceProvider)
           .postData(ApiEndpoints.REGISTER_URL, body: data);
-      // return UserModel(response['token']);
     } on SocketException {
       rethrow;
     } on ServerError {
@@ -53,5 +52,9 @@ class LoginRepositoryImpl extends LoginRepository {
   }
 }
 
+/// Provider-----------------------------------------------------
+
 final loginRepositoryProvider =
     Provider<LoginRepository>((ref) => LoginRepositoryImpl(ref));
+
+/// ---------------------------------------------------------------
