@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart';
 import 'package:riverpod_mvvm_login/data/api_exceptions.dart';
 import 'package:riverpod_mvvm_login/data/network/network_api_services.dart';
 import 'package:riverpod_mvvm_login/model/user_model.dart';
@@ -21,7 +20,6 @@ class LoginRepositoryImpl extends LoginRepository {
       dynamic response = await ref
           .read(apiServiceProvider)
           .postData(ApiEndpoints.LOGIN_URL, body: data);
-      print("In repository data: $response");
       return UserModel(response['token']);
     } on SocketException {
       rethrow;

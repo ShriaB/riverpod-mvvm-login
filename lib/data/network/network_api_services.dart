@@ -38,7 +38,6 @@ class NetworkApiServices extends BaseApiServices {
       Response apiResponse =
           await post(Uri.parse(url), body: body, headers: headers);
       responseData = getDataFromJson(apiResponse);
-      print("in service data: $responseData");
       return responseData;
     } on SocketException {
       /// No internet connectivity
@@ -55,7 +54,6 @@ class NetworkApiServices extends BaseApiServices {
   /// If request was successful then returns decoded json of the response body
   /// Else throws exceptions based on the status code returned
   dynamic getDataFromJson(Response apiResponse) {
-    print("${apiResponse.statusCode}");
     switch (apiResponse.statusCode) {
       case 200:
         {

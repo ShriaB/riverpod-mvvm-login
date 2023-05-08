@@ -32,7 +32,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
   final _obscurePassword = StateProvider<bool>((ref) => true);
 
   void login() async {
-    print("In login");
     String email = _emailController.text;
     String password = _passwordController.text;
 
